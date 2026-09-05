@@ -1,0 +1,254 @@
+.depth-carousel {
+  position: relative;
+  width: 100%;
+  height: 540px;
+  min-height: 460px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  perspective: var(--dc-perspective, 1400px);
+  perspective-origin: 50% 50%;
+  touch-action: pan-y;
+  outline: none;
+  user-select: none;
+  -webkit-user-select: none;
+  cursor: grab;
+}
+
+.depth-carousel:active {
+  cursor: grabbing;
+}
+
+.depth-carousel:focus-visible {
+  outline: 2px solid rgba(139, 197, 61, 0.6);
+  outline-offset: 4px;
+  border-radius: 20px;
+}
+
+.depth-carousel__stage {
+  position: absolute;
+  inset: 0;
+  transform-style: preserve-3d;
+}
+
+.depth-carousel__card {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform-origin: center center;
+  overflow: hidden;
+  background: #011207;
+  border: 2px solid rgba(139, 197, 61, 0.35);
+  box-shadow:
+    0 30px 60px -20px rgba(1, 47, 19, 0.7),
+    0 8px 24px -10px rgba(0, 0, 0, 0.6);
+  will-change: transform, opacity, filter;
+  cursor: pointer;
+  transform: translate(-50%, -50%);
+  transition: border-color 0.25s ease, box-shadow 0.25s ease;
+}
+
+.depth-carousel__card.is-focused {
+  border-color: #8BC53D;
+  box-shadow:
+    0 35px 70px -15px rgba(1, 47, 19, 0.8),
+    0 0 30px rgba(139, 197, 61, 0.35);
+}
+
+.depth-carousel__img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  pointer-events: none;
+  -webkit-user-drag: none;
+}
+
+.depth-carousel__tint {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  pointer-events: none;
+  mix-blend-mode: multiply;
+  background: #012F13;
+}
+
+.depth-carousel__badge {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  background: #012F13;
+  color: #E2F0CC;
+  border: 1px solid rgba(139, 197, 61, 0.4);
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 4px 12px;
+  border-radius: 9999px;
+  z-index: 5;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.depth-carousel__duration {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  background: rgba(0, 0, 0, 0.75);
+  color: #ffffff;
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-family: monospace;
+  z-index: 5;
+}
+
+.depth-carousel__play-btn {
+  position: absolute;
+  top: 45%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 58px;
+  height: 58px;
+  border-radius: 50%;
+  background: #8BC53D;
+  color: #012F13;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4), 0 0 20px rgba(139, 197, 61, 0.5);
+  transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), background 0.2s ease;
+  z-index: 6;
+}
+
+.depth-carousel__card:hover .depth-carousel__play-btn {
+  transform: translate(-50%, -50%) scale(1.12);
+  background: #a2db50;
+}
+
+.depth-carousel__caption {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 24px 20px 20px 20px;
+  background: linear-gradient(180deg, transparent 0%, rgba(1, 18, 7, 0.95) 100%);
+  color: #ffffff;
+  z-index: 5;
+}
+
+.depth-carousel__caption h5 {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #ffffff;
+  margin-bottom: 4px;
+}
+
+.depth-carousel__caption p {
+  font-size: 0.8rem;
+  color: #E2F0CC;
+  line-height: 1.4;
+  margin: 0;
+}
+
+.depth-carousel__arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 3000;
+  width: 48px;
+  height: 48px;
+  display: grid;
+  place-items: center;
+  border: 1.5px solid rgba(139, 197, 61, 0.4);
+  border-radius: 999px;
+  background: rgba(1, 47, 19, 0.85);
+  backdrop-filter: blur(12px);
+  color: #E2F0CC;
+  cursor: pointer;
+  box-shadow: 0 8px 24px rgba(1, 18, 7, 0.35);
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    transform 0.2s ease,
+    color 0.2s ease;
+}
+
+.depth-carousel__arrow:hover {
+  background: #8BC53D;
+  color: #012F13;
+  border-color: #8BC53D;
+  transform: translateY(-50%) scale(1.08);
+}
+
+.depth-carousel__arrow:active {
+  transform: translateY(-50%) scale(0.94);
+}
+
+.depth-carousel__arrow--prev {
+  left: 20px;
+}
+
+.depth-carousel__arrow--next {
+  right: 20px;
+}
+
+.depth-carousel__dots {
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 3000;
+  display: flex;
+  gap: 8px;
+  padding: 8px 16px;
+  border-radius: 999px;
+  background: rgba(1, 47, 19, 0.7);
+  border: 1px solid rgba(139, 197, 61, 0.3);
+  backdrop-filter: blur(8px);
+}
+
+.depth-carousel__dot {
+  width: 8px;
+  height: 8px;
+  padding: 0;
+  border: none;
+  border-radius: 999px;
+  background: rgba(226, 240, 204, 0.4);
+  cursor: pointer;
+  transition:
+    width 0.25s ease,
+    background 0.25s ease;
+}
+
+.depth-carousel__dot.is-active {
+  width: 24px;
+  background: #8BC53D;
+  box-shadow: 0 0 10px rgba(139, 197, 61, 0.5);
+}
+
+@media (max-width: 768px) {
+  .depth-carousel {
+    height: 460px;
+  }
+  .depth-carousel__arrow {
+    width: 38px;
+    height: 38px;
+  }
+  .depth-carousel__arrow--prev {
+    left: 8px;
+  }
+  .depth-carousel__arrow--next {
+    right: 8px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .depth-carousel__card {
+    will-change: auto;
+  }
+  .depth-carousel__arrow,
+  .depth-carousel__dot {
+    transition: none;
+  }
+}
