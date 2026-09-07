@@ -36,168 +36,94 @@ document.addEventListener('DOMContentLoaded', () => {
    VIDEO DATA STORE (User's Local Videos + Google Drive Embeds)
    ========================================================================== */
 const PORTFOLIO_VIDEOS = [
-  // HERO & FEATURED REEL
+  // POSITION 1 - REAL ESTATE (Google Drive)
   {
-    id: 'video-hero',
-    title: 'High-Retention Short-Form Reel',
-    subtitle: 'Timeline 1 Master Edit • Engineered for Viral Watch-Time & Growth',
-    category: 'Featured Coach Reel',
-    categoryGroup: 'coaches',
-    badge: 'Hero Reel',
-    duration: '0:35',
-    type: 'local',
-    src: 'assets/videos/timeline_1.mp4',
-    poster: 'assets/thumb_hero_reel.jpg',
-    tags: ['Hook Retention', 'DaVinci Graded', 'Viral SFX']
-  },
-
-  // REAL ESTATE CATEGORY
-  {
-    id: 'video-re-1',
-    title: 'Luxury Villa Architectural Walkthrough',
-    subtitle: 'Dynamic speed ramps, ambient foley sound design & 4K grading',
-    category: 'Luxury Real Estate',
+    id: 'video-1',
+    title: 'Monarch Butterfly Reel',
+    subtitle: 'Dynamic speed ramps, visual overlays, sound design',
+    category: 'Real Estate',
     categoryGroup: 'real_estate',
     badge: 'Real Estate',
-    duration: '0:48',
-    type: 'local',
-    src: 'assets/videos/monarch butterfly edit.mp4',
-    poster: 'assets/thumb_monarch.jpg',
-    tags: ['Architectural', 'Speed Ramps', 'Luxury Listing']
-  },
-  {
-    id: 'video-re-2',
-    title: 'High-ROI Commercial Investment Pitch',
-    subtitle: '3D animated floorplan tracking & keyframe callouts for investors',
-    category: 'Commercial Property',
-    categoryGroup: 'real_estate',
-    badge: 'Investor Hook',
-    duration: '0:36',
-    type: 'local',
-    src: 'assets/videos/post.mp4',
-    poster: 'assets/thumb_post.jpg',
-    tags: ['3D Floorplan', 'Investor Pitch', 'Property Hook']
-  },
-  {
-    id: 'video-re-3',
-    title: 'Top Producer Realtor Brand Reel',
-    subtitle: 'Market statistics breakdown with punchy captions & neighborhood drone cutaways',
-    category: 'Agent Branding',
-    categoryGroup: 'real_estate',
-    badge: 'Realtor Brand',
-    duration: '0:44',
-    type: 'local',
-    src: 'assets/videos/hero_reel.mp4',
-    poster: 'assets/thumb_hero_reel.jpg',
-    tags: ['Realtor Brand', 'Market Stats', 'Viral Captions']
+    duration: '0:52',
+    type: 'gdrive',
+    src: 'https://drive.google.com/file/d/1vKLI9xTAwPH0ZKB0NdaCm5a_SagfwZ-l/preview',
+    poster: 'assets/thumb_pos1.jpg',
+    tags: ['Real Estate']
   },
 
-  // COACHES CATEGORY
+  // POSITION 2 - COACHES (Google Drive)
   {
     id: 'video-2',
     title: 'Client Acquisition Post Hook',
     subtitle: 'First 3-second retention formula with punchy captions',
-    category: 'Business & Scaling',
+    category: 'Coaches',
     categoryGroup: 'coaches',
-    badge: 'Lead Gen Hook',
+    badge: 'Coaches',
     duration: '0:38',
-    type: 'local',
-    src: 'assets/videos/post.mp4',
-    poster: 'assets/thumb_post.jpg',
-    tags: ['3s Hook', 'Lead Magnet', 'Hormozi Captions']
+    type: 'gdrive',
+    src: 'https://drive.google.com/file/d/1iyoCbWoV7uiXZnxra0zt6chk93L2dlMo/preview',
+    poster: 'assets/thumb_pos2.jpg',
+    tags: ['Coaches']
   },
+
+  // POSITION 3 - COACHES (Google Drive)
   {
     id: 'video-3',
-    title: 'Executive Mindset & High-Ticket Authority',
+    title: 'Executive Authority Reel',
     subtitle: 'Crisp audio cleanup, subtitle highlights, and 3D step callouts',
-    category: 'Executive & Career',
+    category: 'Coaches',
     categoryGroup: 'coaches',
-    badge: 'Authority Reel',
+    badge: 'Coaches',
     duration: '0:45',
     type: 'gdrive',
-    src: 'https://drive.google.com/file/d/1s4gjkHy9xTqHq3y6bMDf9XYr0a5exaO1/preview',
-    poster: 'assets/thumb_executive.jpg',
-    tags: ['3D Callouts', 'Authority', 'Studio Grade']
+    src: 'https://drive.google.com/file/d/1RqILyPp0VmZcc8o_VdY_Qcchw7RPfAZ9/preview',
+    poster: 'assets/thumb_pos3.jpg',
+    tags: ['Coaches']
   },
+
+  // POSITION 4 - COACHES (Google Drive)
   {
     id: 'video-4',
-    title: '1.5x Revenue Scaling Case Study',
+    title: '1.5x Revenue Case Study',
     subtitle: 'Direct callout graphics, charts and high-converting lead magnet CTA',
-    category: 'Business Coach',
+    category: 'Coaches',
     categoryGroup: 'coaches',
-    badge: 'Case Study',
+    badge: 'Coaches',
     duration: '0:48',
     type: 'gdrive',
     src: 'https://drive.google.com/file/d/1hsX4WZIpOtau2QzoPJexw1KlYGWtjzwm/preview',
-    poster: 'assets/thumb_revenue.jpg',
-    tags: ['Revenue Charts', 'Funnel CTA', 'High-Ticket']
-  },
-  {
-    id: 'video-6',
-    title: 'Diet Myth Buster & Energy SFX',
-    subtitle: 'Fast-paced cuts with food b-roll cutaways and studio sound design',
-    category: 'Fitness Mentor',
-    categoryGroup: 'coaches',
-    badge: 'Fitness & Health',
-    duration: '0:42',
-    type: 'local',
-    src: 'assets/videos/post.mp4',
-    poster: 'assets/thumb_post.jpg',
-    tags: ['B-Roll Cutaway', 'SFX', 'Punch-Ins']
-  },
-  {
-    id: 'video-5',
-    title: 'Live Cohort Launch Teaser',
-    subtitle: 'High urgency motion graphics, calendar countdown & student wins',
-    category: 'Launch Promo',
-    categoryGroup: 'coaches',
-    badge: 'Masterclass Teaser',
-    duration: '0:30',
-    type: 'gdrive',
-    src: 'https://drive.google.com/file/d/1Vcwtb90qaYPLdpwZKB8nmBw3MSw5RxOZ/preview',
-    poster: 'assets/thumb_launch.jpg',
-    tags: ['Launch Teaser', 'Countdown', 'Enrollment']
+    poster: 'assets/thumb_pos4.jpg',
+    tags: ['Coaches']
   },
 
-  // OTHERS CATEGORY
+  // POSITION 5 - REAL ESTATE (Google Drive)
   {
-    id: 'video-1',
-    title: 'Monarch Butterfly Cinematic Reel',
-    subtitle: 'Dynamic speed ramps, visual overlays, sound design',
-    category: 'Cinematic Reel',
-    categoryGroup: 'others',
-    badge: 'Cinematic Reel',
-    duration: '0:52',
-    type: 'local',
-    src: 'assets/videos/monarch butterfly edit.mp4',
-    poster: 'assets/thumb_monarch.jpg',
-    tags: ['Speed Ramps', 'Sound FX', 'Viral Pacing']
+    id: 'video-5',
+    title: 'Live Launch Promo',
+    subtitle: 'High urgency motion graphics, calendar countdown & student wins',
+    category: 'Real Estate',
+    categoryGroup: 'real_estate',
+    badge: 'Real Estate',
+    duration: '0:30',
+    type: 'gdrive',
+    src: 'https://drive.google.com/file/d/1aMQRiRU_lMSH-cYhDfWe5wUvCKtrWlsk/preview',
+    poster: 'assets/thumb_pos5.jpg',
+    tags: ['Real Estate']
   },
+
+  // POSITION 6 - OTHERS (Google Drive)
   {
-    id: 'video-oth-2',
-    title: 'Cyberpunk Apparel Brand Teaser',
-    subtitle: 'Neon vector tracking, hyperlapse transitions & kinetic audio foley',
-    category: 'Brand Commercial',
+    id: 'video-6',
+    title: 'Diet Myth Buster SFX',
+    subtitle: 'Fast-paced cuts with food b-roll cutaways and studio sound design',
+    category: 'Others',
     categoryGroup: 'others',
-    badge: 'Brand Teaser',
-    duration: '0:35',
-    type: 'local',
-    src: 'assets/videos/post.mp4',
-    poster: 'assets/thumb_post.jpg',
-    tags: ['Hyperlapse', 'Neon Tracking', 'Foley SFX']
-  },
-  {
-    id: 'video-oth-3',
-    title: 'Next-Gen Tech Gadget Showcase',
-    subtitle: 'Seamless camera whip pans, macro lens zooms & visual rhythm',
-    category: 'Product Launch',
-    categoryGroup: 'others',
-    badge: 'Tech Showcase',
-    duration: '0:40',
-    type: 'local',
-    src: 'assets/videos/hero_reel.mp4',
-    poster: 'assets/thumb_hero_reel.jpg',
-    tags: ['Macro Zoom', 'Whip Pans', 'Visual Rhythm']
+    badge: 'Others',
+    duration: '0:42',
+    type: 'gdrive',
+    src: 'https://drive.google.com/file/d/1s4gjkHy9xTqHq3y6bMDf9XYr0a5exaO1/preview',
+    poster: 'assets/thumb_pos6.jpg',
+    tags: ['Others']
   }
 ];
 
