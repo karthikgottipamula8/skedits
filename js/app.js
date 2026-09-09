@@ -929,10 +929,10 @@ function initDynamicBookingEngine() {
   // State Store
   const state = {
     packageId: 'starter',
-    packageName: 'Starter Pack (Offer)',
-    basePrice: 499,
-    baseReels: 1,
-    reels: 1,
+    packageName: 'Starter Pack',
+    basePrice: 999,
+    baseReels: 13,
+    reels: 13,
     turnaround: 'standard',
     turnaroundCost: 0,
     addons: new Set(),
@@ -950,20 +950,75 @@ function initDynamicBookingEngine() {
     'custom-thumb': { name: '3x High-CTR Cover Thumbnails', price: 99 }
   };
 
-  // Package definitions
-  const PACKAGES_INFO = {
-    starter: { name: 'Starter Pack', basePrice: 999, defaultReels: 1 },
-    growth: { name: 'Growth Coach Pack', basePrice: 999, defaultReels: 1 },
-    pro: { name: 'Premium Pack', basePrice: 1499, defaultReels: 1 }
+  // Central Pricing Configuration (Single Source of Truth)
+  const CENTRAL_PRICING_CONFIG = {
+    starter: { name: 'Starter Pack', normalPrice: 999, offerPrice: 499 },
+    growth: { name: 'Growth Coach Pack', normalPrice: 1299, offerPrice: 999, referencePrice: 1299 },
+    pro: { name: 'Premium Pack', normalPrice: 1799, offerPrice: 1499, referencePrice: 1799 },
+    offerThreshold: 13
   };
+
+  // Centralized Pricing Function
+  function calculateBookingPrice(packageId, quantity) {
+    const qty = Math.max(1, parseInt(quantity, 10) || 1);
+    const pkg = CENTRAL_PRICING_CONFIG[packageId] || CENTRAL_PRICING_CONFIG.starter;
+
+    if (qty >= CENTRAL_PRICING_CONFIG.offerThreshold) {
+      // 13+ reels offer for selected package: flat pkg.offerPrice per reel
+      const total = Math.round(qty * pkg.offerPrice);
+      return {
+        packageId,
+        packageName: pkg.name,
+        basePrice: pkg.normalPrice,
+        offerPrice: pkg.offerPrice,
+        reels: qty,
+        subtotal: total,
+        discountPercentage: 0,
+        discountAmount: 0,
+        savings: (pkg.normalPrice * qty) - total,
+        total,
+        pricePerReel: pkg.offerPrice,
+        isOfferUnlocked: true,
+        progressionMsg: `🎉 ₹${pkg.offerPrice}*/reel offer unlocked!`
+      };
+    } else {
+      // 1 to 12 reels: normal base price with (quantity - 1)% discount on complete subtotal
+      const normalPrice = pkg.normalPrice;
+      const subtotal = normalPrice * qty;
+      const discountPercentage = qty - 1; // 1 reel -> 0%, 2 reels -> 1%, ..., 12 reels -> 11%
+      const discountAmount = (subtotal * discountPercentage) / 100;
+      const total = Math.round(subtotal - discountAmount);
+      const savings = Math.round(discountAmount);
+      const pricePerReel = Math.round(total / qty);
+
+      const reelsNeeded = 13 - qty;
+      let progressionMsg = reelsNeeded === 1 
+        ? `🔥 Add 1 more reel to unlock ₹${pkg.offerPrice}*/reel.`
+        : `🔥 You're only ${reelsNeeded} reels away from unlocking ₹${pkg.offerPrice}*/reel.`;
+
+      return {
+        packageId,
+        packageName: pkg.name,
+        basePrice: normalPrice,
+        offerPrice: pkg.offerPrice,
+        reels: qty,
+        subtotal,
+        discountPercentage,
+        discountAmount,
+        savings,
+        total,
+        pricePerReel,
+        isOfferUnlocked: false,
+        progressionMsg
+      };
+    }
+  }
 
   // UI Elements (On-Page)
   const pagePkgOptions = document.querySelectorAll('#engine-package-selector .package-option');
   const pageSlider = document.getElementById('engine-volume-slider');
   const pageReelCount = document.getElementById('engine-reel-count');
   const pageDiscountTag = document.getElementById('engine-discount-tag');
-  const pageTurnaroundTabs = document.querySelectorAll('#engine-turnaround-selector .turnaround-tab');
-  const pageAddonCards = document.querySelectorAll('#engine-addons-container .addon-card');
   const pageCoachName = document.getElementById('engine-coach-name');
   const pageCoachHandle = document.getElementById('engine-coach-handle');
   const pageCoachNiche = document.getElementById('engine-coach-niche');
@@ -974,15 +1029,10 @@ function initDynamicBookingEngine() {
   const summaryPkgCost = document.getElementById('summary-pkg-cost');
   const summaryReelCount = document.getElementById('summary-reel-count');
   const summaryVolumeSubtotal = document.getElementById('summary-volume-subtotal');
-  const summaryTurnaroundLabel = document.getElementById('summary-turnaround-label');
-  const summaryTurnaroundCost = document.getElementById('summary-turnaround-cost');
-  const summaryAddonCount = document.getElementById('summary-addon-count');
-  const summaryAddonCost = document.getElementById('summary-addon-cost');
   const summaryDiscountRow = document.getElementById('summary-discount-row');
   const summaryDiscountPct = document.getElementById('summary-discount-pct');
   const summaryDiscountAmt = document.getElementById('summary-discount-amt');
   const engineGrandTotal = document.getElementById('engine-grand-total');
-  const enginePayloadPreview = document.getElementById('engine-payload-preview');
 
   // Modal UI Elements
   const modal = document.getElementById('booking-modal');
@@ -991,49 +1041,29 @@ function initDynamicBookingEngine() {
   const modalQtyNum = document.getElementById('modal-qty-num');
   const modalQtyMinus = document.getElementById('modal-qty-minus');
   const modalQtyPlus = document.getElementById('modal-qty-plus');
-  const modalSpeedStd = document.getElementById('modal-speed-std');
-  const modalSpeedExp = document.getElementById('modal-speed-exp');
-  const modalAddonCards = document.querySelectorAll('#modal-addons-grid .modal-addon-card');
   const modalCoachName = document.getElementById('modal-coach-name');
   const modalCoachPhone = document.getElementById('modal-coach-phone');
   const modalGrandTotal = document.getElementById('modal-grand-total');
   const modalSummarySubtext = document.getElementById('modal-summary-subtext');
-  const modalPayloadPreview = document.getElementById('modal-payload-preview');
 
-  // Calculation Engine
-  function calculateTotal() {
-    const pkg = PACKAGES_INFO[state.packageId] || PACKAGES_INFO.starter;
-    const basePrice = state.basePrice || pkg.basePrice || 999;
-    
-    let effectiveUnitPrice = 0;
-    let netTotal = 0;
-
-    if (state.reels >= 13) {
-      // 13+ reels: flat 499 per reel
-      effectiveUnitPrice = 499;
-      netTotal = state.reels * 499;
-    } else {
-      // Under 13 reels: 10% off base price
-      effectiveUnitPrice = Math.round(basePrice * 0.90);
-      netTotal = Math.round(state.reels * basePrice * 0.90);
-    }
-
-    return {
-      basePrice,
-      effectiveUnitPrice,
-      subtotal: basePrice * state.reels,
-      netTotal: Math.max(netTotal, 1)
-    };
-  }
+  // Modal Breakdown Elements
+  const breakdownSubtotal = document.getElementById('breakdown-subtotal');
+  const breakdownDiscountSpan = document.getElementById('breakdown-discount-span');
+  const breakdownDiscountPct = document.getElementById('breakdown-discount-pct');
+  const breakdownSavingsSpan = document.getElementById('breakdown-savings-span');
+  const breakdownSavingsAmt = document.getElementById('breakdown-savings-amt');
 
   // Pre-formatted, URI-Encoded Payload Generator
   function generateFormattedPayload() {
-    const calc = calculateTotal();
-    const pkg = PACKAGES_INFO[state.packageId] || PACKAGES_INFO.starter;
+    const calc = calculateBookingPrice(state.packageId, state.reels);
 
-    const rateNote = state.reels >= 13 
-      ? `🔥 Special Offer Rate: ₹499/reel (13+ reels)`
-      : `✨ 10% Off Rate: ₹${calc.effectiveUnitPrice}/reel (Base ₹${calc.basePrice})`;
+    const rateNote = calc.isOfferUnlocked
+      ? `🎉 ₹${calc.offerPrice}*/reel Special Offer Unlocked!`
+      : `₹${calc.pricePerReel}/reel (${calc.discountPercentage}% Discount Applied)`;
+
+    const breakdownText = calc.isOfferUnlocked
+      ? `💡 *Offer Details:* Flat ₹${calc.offerPrice}* × ${calc.reels} Reels`
+      : `💡 *Subtotal:* ₹${calc.subtotal.toLocaleString('en-IN')}\n🏷️ *You Save:* ₹${calc.savings.toLocaleString('en-IN')}`;
 
     const payload = 
 `🚀 *NEW COACHING EDITING BRIEF — SK EDITS*
@@ -1042,13 +1072,14 @@ function initDynamicBookingEngine() {
 📱 *Handle / Contact:* ${state.coachHandle || 'Not specified'}
 🎯 *Coaching Niche:* ${state.coachNiche || 'Executive & Business Coaching'}
 
-📦 *Selected Package:* ${pkg.name}
-🎬 *Reel Volume Target:* ${state.reels} Video${state.reels > 1 ? 's' : ''}
-💡 *Applied Rate:* ${rateNote}
+📦 *Selected Package:* ${calc.packageName}
+🎬 *Reel Volume Target:* ${calc.reels} Video${calc.reels > 1 ? 's' : ''}
+💡 *Pricing Status:* ${rateNote}
+${breakdownText}
 
-💡 *Goals / Style Notes:* ${state.coachNotes || 'High-retention Hormozi captions & dynamic pacing'}
+💡 *Goals / Style Notes:* ${state.coachNotes || 'High-retention captions & dynamic pacing'}
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-💰 *Total Calculated Investment:* ₹${calc.netTotal.toLocaleString('en-IN')}
+💰 *Total Calculated Investment:* ₹${calc.total.toLocaleString('en-IN')}
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 Ready to start editing! Please confirm availability.`;
 
@@ -1057,105 +1088,141 @@ Ready to start editing! Please confirm availability.`;
 
   // Synchronize UI
   function updateUI() {
-    const calc = calculateTotal();
-    const pkg = PACKAGES_INFO[state.packageId] || PACKAGES_INFO.starter;
+    const calc = calculateBookingPrice(state.packageId, state.reels);
     const payload = generateFormattedPayload();
 
-    // 1. On-Page UI updates
+    // 1. Modal Offer Progression Tag
+    const modalOfferProgressionTag = document.getElementById('modal-offer-progression-tag');
+    if (modalOfferProgressionTag) {
+      if (calc.isOfferUnlocked) {
+        modalOfferProgressionTag.innerHTML = `🎉 ₹${calc.offerPrice}*/reel offer unlocked! <span style="font-weight:400; color:var(--text-dim);">(${calc.reels} reels × ₹${calc.offerPrice}* = ₹${calc.total.toLocaleString('en-IN')})</span>`;
+        modalOfferProgressionTag.style.background = 'rgba(163, 230, 53, 0.15)';
+        modalOfferProgressionTag.style.borderColor = 'rgba(163, 230, 53, 0.5)';
+      } else {
+        modalOfferProgressionTag.textContent = calc.progressionMsg;
+        modalOfferProgressionTag.style.background = 'rgba(163, 230, 53, 0.08)';
+        modalOfferProgressionTag.style.borderColor = 'rgba(163, 230, 53, 0.3)';
+      }
+    }
+
+    // 2. Offer Notice Banners
+    const noticeText = `🔥 Claim the ₹${calc.offerPrice}*/reel offer — book at least 13 reels.`;
+    const modalOfferNoticeText = document.getElementById('modal-offer-notice-text');
+    const engineOfferNoticeText = document.getElementById('engine-offer-notice-text');
+    if (modalOfferNoticeText) modalOfferNoticeText.textContent = noticeText;
+    if (engineOfferNoticeText) engineOfferNoticeText.textContent = noticeText;
+
+    // 3. Modal Detailed Breakdown Row
+    if (breakdownSubtotal) breakdownSubtotal.textContent = `₹${calc.subtotal.toLocaleString('en-IN')}`;
+    if (breakdownDiscountSpan && breakdownDiscountPct) {
+      if (calc.isOfferUnlocked) {
+        breakdownDiscountSpan.style.display = 'inline';
+        breakdownDiscountSpan.innerHTML = `Offer: <strong style="color:var(--accent-lime);">₹${calc.offerPrice}*/reel</strong>`;
+      } else {
+        breakdownDiscountSpan.style.display = 'inline';
+        breakdownDiscountSpan.innerHTML = `Discount: <strong style="color:var(--accent-lime);">${calc.discountPercentage}%</strong>`;
+      }
+    }
+    if (breakdownSavingsSpan && breakdownSavingsAmt) {
+      if (calc.isOfferUnlocked || calc.savings <= 0) {
+        breakdownSavingsSpan.style.display = 'none';
+      } else {
+        breakdownSavingsSpan.style.display = 'inline';
+        breakdownSavingsAmt.textContent = `₹${calc.savings.toLocaleString('en-IN')}`;
+      }
+    }
+
+    // 4. On-Page UI updates (if elements exist)
     if (pageReelCount) pageReelCount.textContent = state.reels;
     if (pageSlider) pageSlider.value = state.reels;
 
     if (pageDiscountTag) {
-      if (state.reels >= 13) {
-        pageDiscountTag.innerHTML = `<i class="fas fa-fire" style="color:var(--accent-lime);"></i> <strong style="color:var(--accent-lime);">Flat ₹499/reel Special Offer Applied!</strong>`;
+      if (calc.isOfferUnlocked) {
+        pageDiscountTag.innerHTML = `<i class="fas fa-fire" style="color:var(--accent-lime);"></i> <strong style="color:var(--accent-lime);">Flat ₹${calc.offerPrice}*/reel Special Offer Applied!</strong>`;
       } else {
-        pageDiscountTag.innerHTML = `<i class="fas fa-tag" style="color:var(--accent-lime);"></i> <span><strong style="color:var(--accent-lime);">10% Off Applied (₹${calc.effectiveUnitPrice}/reel)!</strong> Select 13+ reels for flat ₹499/reel.</span>`;
+        pageDiscountTag.innerHTML = `<i class="fas fa-tag" style="color:var(--accent-lime);"></i> <span><strong style="color:var(--accent-lime);">${calc.discountPercentage}% Off Applied (₹${calc.pricePerReel}/reel)!</strong> Select 13+ reels for flat ₹${calc.offerPrice}*/reel.</span>`;
       }
     }
 
-    if (summaryPkgName) summaryPkgName.textContent = pkg.name;
-    if (summaryPkgCost) summaryPkgCost.textContent = `₹${calc.effectiveUnitPrice}/reel`;
+    if (summaryPkgName) summaryPkgName.textContent = calc.packageName;
+    if (summaryPkgCost) summaryPkgCost.textContent = `₹${calc.pricePerReel}/reel`;
     if (summaryReelCount) summaryReelCount.textContent = state.reels;
-    if (summaryVolumeSubtotal) summaryVolumeSubtotal.textContent = `₹${calc.netTotal.toLocaleString('en-IN')}`;
+    if (summaryVolumeSubtotal) summaryVolumeSubtotal.textContent = `₹${calc.total.toLocaleString('en-IN')}`;
     
-    // Hide volume bonus discount row as requested
     if (summaryDiscountRow) summaryDiscountRow.style.display = 'none';
 
     if (engineGrandTotal) {
-      engineGrandTotal.textContent = calc.netTotal.toLocaleString('en-IN');
+      engineGrandTotal.textContent = calc.total.toLocaleString('en-IN');
       engineGrandTotal.style.animation = 'none';
       setTimeout(() => { engineGrandTotal.style.animation = 'countUpPopLime 0.3s ease'; }, 10);
     }
 
-    if (enginePayloadPreview) {
-      enginePayloadPreview.textContent = payload;
-    }
-
-    // 2. Modal UI updates
+    // 5. Modal UI updates
     if (modalQtyNum) modalQtyNum.textContent = state.reels;
-    if (modalGrandTotal) modalGrandTotal.textContent = calc.netTotal.toLocaleString('en-IN');
+    if (modalGrandTotal) modalGrandTotal.textContent = calc.total.toLocaleString('en-IN');
     if (modalSummarySubtext) {
-      modalSummarySubtext.textContent = `${pkg.name} • ${state.reels} Reel${state.reels > 1 ? 's' : ''} @ ₹${calc.effectiveUnitPrice}/reel`;
+      if (calc.isOfferUnlocked) {
+        modalSummarySubtext.textContent = `${calc.packageName} • ${calc.reels} Reels @ ₹${calc.offerPrice}*/reel (Offer)`;
+      } else {
+        modalSummarySubtext.textContent = `${calc.packageName} • ${calc.reels} Reel${calc.reels > 1 ? 's' : ''} @ ₹${calc.pricePerReel}/reel (${calc.discountPercentage}% off)`;
+      }
     }
-    if (modalPayloadPreview) {
-      modalPayloadPreview.textContent = payload;
+  }
+
+  // ==========================================================================
+  // GOOGLE SHEETS INTEGRATION FOR SPREADSHEET: 1J6js4Xm_79wDxGUFRM0tqx3J7v-1rDAlaI3xBjgxIBE
+  // ==========================================================================
+  const GOOGLE_SHEET_WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbwCFADIK5peVhRUdBEHwCZNiTGNIp6mZ_sUQWX9N12NaUxFN61ENS-_-iBNN8MQPk8/exec';
+
+  function sendLeadToGoogleSheet(leadData) {
+    try {
+      const payload = {
+        timestamp: new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' }),
+        coachName: leadData.coachName || 'Not specified',
+        contactPhone: leadData.contactPhone || leadData.coachHandle || 'Not specified',
+        niche: leadData.niche || leadData.coachNiche || 'Executive & Business Coaching',
+        packageName: leadData.packageName || 'Starter Pack',
+        reelsCount: leadData.reelsCount || leadData.reels || 13,
+        totalInvestment: leadData.totalInvestment || `₹${leadData.total || 0}`,
+        notes: leadData.notes || leadData.coachNotes || 'N/A',
+        source: leadData.source || 'Dynamic Booking Engine'
+      };
+
+      if (GOOGLE_SHEET_WEBAPP_URL && !GOOGLE_SHEET_WEBAPP_URL.includes('YOUR_SCRIPT_ID_HERE')) {
+        fetch(GOOGLE_SHEET_WEBAPP_URL, {
+          method: 'POST',
+          mode: 'no-cors',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        }).catch(err => console.log('Sheet submission background:', err));
+      } else {
+        console.log('Google Sheets Lead Captured locally:', payload);
+      }
+    } catch (e) {
+      console.log('Sheet lead handler note:', e);
     }
   }
 
   // --- Dispatch Event Handlers ---
   function dispatchToWhatsApp() {
+    const calc = calculateBookingPrice(state.packageId, state.reels);
+    
+    // Automatically record lead in Google Sheet
+    sendLeadToGoogleSheet({
+      coachName: state.coachName,
+      contactPhone: state.coachHandle,
+      niche: state.coachNiche,
+      packageName: calc.packageName,
+      reelsCount: calc.reels,
+      totalInvestment: `₹${calc.total.toLocaleString('en-IN')}`,
+      notes: state.coachNotes,
+      source: 'Dynamic Booking Engine'
+    });
+
     const payload = generateFormattedPayload();
     const encoded = encodeURIComponent(payload);
     const whatsappUrl = `https://wa.me/${defaultPhoneNumber}?text=${encoded}`;
     window.open(whatsappUrl, '_blank');
-  }
-
-  function dispatchToTelegram() {
-    const payload = generateFormattedPayload();
-    const encoded = encodeURIComponent(payload);
-    const telegramUrl = `https://t.me/${telegramUsername}?text=${encoded}`;
-    window.open(telegramUrl, '_blank');
-  }
-
-  function copyPayloadToClipboard(btnElement) {
-    const payload = generateFormattedPayload();
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-      navigator.clipboard.writeText(payload).then(() => {
-        showCopyFeedback(btnElement);
-      });
-    } else {
-      const tempArea = document.createElement('textarea');
-      tempArea.value = payload;
-      document.body.appendChild(tempArea);
-      tempArea.select();
-      document.execCommand('copy');
-      document.body.removeChild(tempArea);
-      showCopyFeedback(btnElement);
-    }
-  }
-
-  function showCopyFeedback(btnElement) {
-    if (!btnElement) return;
-    const originalHtml = btnElement.innerHTML;
-    btnElement.innerHTML = '<i class="fas fa-check" style="color:var(--text-dark);"></i> Copied Brief!';
-    btnElement.style.background = '#c8f542';
-    btnElement.style.color = '#12300f';
-
-    const toast = document.getElementById('conversion-toast');
-    const toastName = document.getElementById('toast-creator-name');
-    const toastAction = document.getElementById('toast-action-text');
-    if (toast && toastName && toastAction) {
-      toastName.textContent = 'Brief Copied to Clipboard!';
-      toastAction.textContent = 'Paste into WhatsApp, Telegram or Email to book instantly.';
-      toast.classList.add('visible');
-      setTimeout(() => toast.classList.remove('visible'), 4000);
-    }
-
-    setTimeout(() => {
-      btnElement.innerHTML = originalHtml;
-      btnElement.style.background = '';
-      btnElement.style.color = '';
-    }, 2000);
   }
 
   // Bind On-Page Package Selection
@@ -1188,61 +1255,6 @@ Ready to start editing! Please confirm availability.`;
     });
   }
 
-  // Bind On-Page Turnaround Selection
-  pageTurnaroundTabs.forEach(tab => {
-    tab.addEventListener('click', () => {
-      pageTurnaroundTabs.forEach(t => t.classList.remove('selected'));
-      tab.classList.add('selected');
-      const speed = tab.getAttribute('data-speed');
-      state.turnaround = speed;
-      state.turnaroundCost = parseInt(tab.getAttribute('data-cost'), 10) || 0;
-
-      // Sync modal buttons
-      if (modalSpeedStd && modalSpeedExp) {
-        if (speed === 'express') {
-          modalSpeedExp.style.background = 'rgba(13, 54, 23, 0.9)';
-          modalSpeedExp.style.color = '#fff';
-          modalSpeedStd.style.background = 'transparent';
-          modalSpeedStd.style.color = 'rgba(255,255,255,0.7)';
-        } else {
-          modalSpeedStd.style.background = 'rgba(13, 54, 23, 0.9)';
-          modalSpeedStd.style.color = '#fff';
-          modalSpeedExp.style.background = 'transparent';
-          modalSpeedExp.style.color = 'rgba(255,255,255,0.7)';
-        }
-      }
-
-      updateUI();
-    });
-  });
-
-  // Bind On-Page Addon Toggles
-  pageAddonCards.forEach(card => {
-    card.addEventListener('click', () => {
-      const addonId = card.getAttribute('data-addon-id');
-      if (state.addons.has(addonId)) {
-        state.addons.delete(addonId);
-        card.classList.remove('selected');
-      } else {
-        state.addons.add(addonId);
-        card.classList.add('selected');
-      }
-
-      // Sync modal addon card
-      modalAddonCards.forEach(mCard => {
-        if (mCard.getAttribute('data-addon-id') === addonId) {
-          if (state.addons.has(addonId)) {
-            mCard.classList.add('selected');
-          } else {
-            mCard.classList.remove('selected');
-          }
-        }
-      });
-
-      updateUI();
-    });
-  });
-
   // Bind On-Page Inputs
   if (pageCoachName) pageCoachName.addEventListener('input', (e) => { state.coachName = e.target.value; updateUI(); });
   if (pageCoachHandle) pageCoachHandle.addEventListener('input', (e) => { state.coachHandle = e.target.value; updateUI(); });
@@ -1251,12 +1263,7 @@ Ready to start editing! Please confirm availability.`;
 
   // Bind On-Page Action Buttons
   const btnPageWhatsapp = document.getElementById('btn-dispatch-whatsapp');
-  const btnPageTelegram = document.getElementById('btn-dispatch-telegram');
-  const btnPageCopy = document.getElementById('btn-copy-brief');
-
   if (btnPageWhatsapp) btnPageWhatsapp.addEventListener('click', dispatchToWhatsApp);
-  if (btnPageTelegram) btnPageTelegram.addEventListener('click', dispatchToTelegram);
-  if (btnPageCopy) btnPageCopy.addEventListener('click', () => copyPayloadToClipboard(btnPageCopy));
 
   // --- Modal Bindings ---
   modalPkgOptions.forEach(opt => {
@@ -1298,72 +1305,11 @@ Ready to start editing! Please confirm availability.`;
     });
   }
 
-  if (modalSpeedStd && modalSpeedExp) {
-    modalSpeedStd.addEventListener('click', () => {
-      state.turnaround = 'standard';
-      state.turnaroundCost = 0;
-      modalSpeedStd.style.background = 'rgba(13, 54, 23, 0.9)';
-      modalSpeedStd.style.color = '#fff';
-      modalSpeedExp.style.background = 'transparent';
-      modalSpeedExp.style.color = 'rgba(255,255,255,0.7)';
-      pageTurnaroundTabs.forEach(t => {
-        if (t.getAttribute('data-speed') === 'standard') t.classList.add('selected');
-        else t.classList.remove('selected');
-      });
-      updateUI();
-    });
-
-    modalSpeedExp.addEventListener('click', () => {
-      state.turnaround = 'express';
-      state.turnaroundCost = 199;
-      modalSpeedExp.style.background = 'rgba(13, 54, 23, 0.9)';
-      modalSpeedExp.style.color = '#fff';
-      modalSpeedStd.style.background = 'transparent';
-      modalSpeedStd.style.color = 'rgba(255,255,255,0.7)';
-      pageTurnaroundTabs.forEach(t => {
-        if (t.getAttribute('data-speed') === 'express') t.classList.add('selected');
-        else t.classList.remove('selected');
-      });
-      updateUI();
-    });
-  }
-
-  modalAddonCards.forEach(card => {
-    card.addEventListener('click', () => {
-      const addonId = card.getAttribute('data-addon-id');
-      if (state.addons.has(addonId)) {
-        state.addons.delete(addonId);
-        card.classList.remove('selected');
-      } else {
-        state.addons.add(addonId);
-        card.classList.add('selected');
-      }
-
-      // Sync on-page card
-      pageAddonCards.forEach(pCard => {
-        if (pCard.getAttribute('data-addon-id') === addonId) {
-          if (state.addons.has(addonId)) {
-            pCard.classList.add('selected');
-          } else {
-            pCard.classList.remove('selected');
-          }
-        }
-      });
-
-      updateUI();
-    });
-  });
-
   if (modalCoachName) modalCoachName.addEventListener('input', (e) => { state.coachName = e.target.value; updateUI(); });
   if (modalCoachPhone) modalCoachPhone.addEventListener('input', (e) => { state.coachHandle = e.target.value; updateUI(); });
 
   const modalDispatchWhatsapp = document.getElementById('modal-dispatch-whatsapp');
-  const modalDispatchTelegram = document.getElementById('modal-dispatch-telegram');
-  const modalCopyBrief = document.getElementById('modal-copy-brief');
-
   if (modalDispatchWhatsapp) modalDispatchWhatsapp.addEventListener('click', dispatchToWhatsApp);
-  if (modalDispatchTelegram) modalDispatchTelegram.addEventListener('click', dispatchToTelegram);
-  if (modalCopyBrief) modalCopyBrief.addEventListener('click', () => copyPayloadToClipboard(modalCopyBrief));
 
   // --- Modal Open & Close Management ---
   const triggerBtns = document.querySelectorAll('.open-booking-modal-btn');
@@ -1374,16 +1320,16 @@ Ready to start editing! Please confirm availability.`;
       const planPrice = btn.getAttribute('data-plan-price') || '';
 
       // Auto-select package based on button trigger
-      if (planPrice.includes('499') || planName.toLowerCase().includes('starter')) {
+      if (planName.toLowerCase().includes('starter') || planPrice.includes('499')) {
         state.packageId = 'starter';
-        state.basePrice = 499;
-      } else if (planPrice.includes('999') || planName.toLowerCase().includes('growth')) {
+      } else if (planName.toLowerCase().includes('growth') || planPrice.includes('1299') || planPrice.includes('999')) {
         state.packageId = 'growth';
-        state.basePrice = 999;
-      } else if (planPrice.includes('1499') || planName.toLowerCase().includes('premium') || planPrice.includes('1500') || planName.toLowerCase().includes('pro')) {
+      } else if (planName.toLowerCase().includes('premium') || planPrice.includes('1799') || planPrice.includes('1499') || planName.toLowerCase().includes('pro')) {
         state.packageId = 'pro';
-        state.basePrice = 1499;
       }
+
+      // Automatically set Reel Volume to 13 to unlock offer immediately when claiming from cards
+      state.reels = 13;
 
       // Sync radio buttons
       modalPkgOptions.forEach(opt => {
@@ -1403,6 +1349,11 @@ Ready to start editing! Please confirm availability.`;
       });
 
       updateUI();
+
+      const engineSec = document.getElementById('booking-engine');
+      if (engineSec) {
+        engineSec.scrollIntoView({ behavior: 'smooth' });
+      }
 
       if (modal) {
         modal.classList.add('active');
@@ -1529,14 +1480,21 @@ function initContactFormAndWhatsApp() {
    ========================================================================== */
 function initFloatingWhatsApp() {
   const floatingBtn = document.getElementById('floating-whatsapp-trigger');
+  const callBtn = document.getElementById('floating-call-trigger');
   const defaultPhoneNumber = '918074015211';
 
-  if (!floatingBtn) return;
+  if (floatingBtn) {
+    floatingBtn.addEventListener('click', () => {
+      const text = encodeURIComponent("Hi SK Edits! I'm interested in the ₹499/reel 1-Month Commitment Coaching Pack. Let's chat!");
+      window.open(`https://wa.me/${defaultPhoneNumber}?text=${text}`, '_blank');
+    });
+  }
 
-  floatingBtn.addEventListener('click', () => {
-    const text = encodeURIComponent("Hi SK Edits! I'm interested in the ₹499/reel 1-Month Commitment Coaching Pack. Let's chat!");
-    window.open(`https://wa.me/${defaultPhoneNumber}?text=${text}`, '_blank');
-  });
+  if (callBtn) {
+    callBtn.addEventListener('click', (e) => {
+      window.location.href = 'tel:8074015211';
+    });
+  }
 }
 
 /* ==========================================================================
