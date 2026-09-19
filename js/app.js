@@ -1183,18 +1183,34 @@ Ready to start editing! Please confirm availability.`;
         niche: leadData.niche || leadData.coachNiche || 'Executive & Business Coaching',
         packageName: leadData.packageName || 'Starter Pack',
         reelsCount: leadData.reelsCount || leadData.reels || 13,
-        totalInvestment: leadData.totalInvestment || `₹${leadData.total || 0}`,
+        totalInvestment: leadData.totalInvestment || (leadData.total ? `₹${leadData.total.toLocaleString('en-IN')}` : 'N/A'),
         notes: leadData.notes || leadData.coachNotes || 'N/A',
         source: leadData.source || 'Dynamic Booking Engine'
       };
 
       if (GOOGLE_SHEET_WEBAPP_URL && !GOOGLE_SHEET_WEBAPP_URL.includes('YOUR_SCRIPT_ID_HERE')) {
-        fetch(GOOGLE_SHEET_WEBAPP_URL, {
-          method: 'POST',
-          mode: 'no-cors',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
-        }).catch(err => console.log('Sheet submission background:', err));
+        const jsonString = JSON.stringify(payload);
+
+        // 1. Primary: navigator.sendBeacon (most reliable background transmission, immune to page unload/redirects)
+        let beaconSuccess = false;
+        if (navigator && typeof navigator.sendBeacon === 'function') {
+          try {
+            const blob = new Blob([jsonString], { type: 'text/plain;charset=UTF-8' });
+            beaconSuccess = navigator.sendBeacon(GOOGLE_SHEET_WEBAPP_URL, blob);
+          } catch (_) {
+            beaconSuccess = false;
+          }
+        }
+
+        // 2. Fallback: fetch with text/plain (avoids CORS preflight OPTIONS request blocking)
+        if (!beaconSuccess) {
+          fetch(GOOGLE_SHEET_WEBAPP_URL, {
+            method: 'POST',
+            mode: 'no-cors',
+            headers: { 'Content-Type': 'text/plain;charset=UTF-8' },
+            body: jsonString
+          }).catch(err => console.log('Sheet submission background error:', err));
+        }
       } else {
         console.log('Google Sheets Lead Captured locally:', payload);
       }
@@ -1219,10 +1235,10 @@ Ready to start editing! Please confirm availability.`;
       source: 'Dynamic Booking Engine'
     });
 
-    const payload = generateFormattedPayload();
-    const encoded = encodeURIComponent(payload);
-    const whatsappUrl = `https://wa.me/${defaultPhoneNumber}?text=${encoded}`;
-    window.open(whatsappUrl, '_blank');
+    closeBookingModal();
+    if (typeof window.showAuthModal === 'function') {
+      window.showAuthModal();
+    }
   }
 
   // Bind On-Page Package Selection
@@ -1368,6 +1384,7 @@ Ready to start editing! Please confirm availability.`;
       document.body.style.overflow = 'auto';
     }
   }
+  window.closeBookingModal = closeBookingModal;
 
   if (modalCloseBtn) modalCloseBtn.addEventListener('click', closeBookingModal);
   if (modal) {
@@ -1445,6 +1462,18 @@ function initContactFormAndWhatsApp() {
       const coachNiche = document.getElementById('contact-coach-niche')?.value || 'Coaching Business';
       const packageSelected = document.getElementById('contact-project-type')?.value || 'Starter Pack (₹499)';
       const message = document.getElementById('contact-message')?.value.trim() || 'Ready to scale short-form coaching content.';
+
+      // Automatically record lead in Google Sheet
+      sendLeadToGoogleSheet({
+        coachName: name,
+        contactPhone: email,
+        niche: coachNiche,
+        packageName: packageSelected,
+        reelsCount: 'Contact Inquiry',
+        totalInvestment: 'Custom',
+        notes: message,
+        source: 'Contact Form'
+      });
 
       const formattedText = encodeURIComponent(
         `*New Coach Inquiry for SK Edits*\n\n` +

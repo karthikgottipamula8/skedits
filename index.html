@@ -10,23 +10,33 @@
   <meta name="robots" content="index, follow">
   <link rel="canonical" href="https://skedits.agency/">
 
-  <!-- Favicon / Brand Icon -->
-  <link rel="icon" type="image/png" href="assets/logo-nav.png">
-  <link rel="apple-touch-icon" href="assets/logo.png">
+  <!-- Favicon / Brand Meta Icons -->
+  <link rel="icon" type="image/png" sizes="32x32" href="assets/logo-nav.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="assets/logo-nav.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="assets/logo.png">
+  <link rel="shortcut icon" href="assets/logo-nav.png">
+  <meta name="msapplication-TileImage" content="assets/logo.png">
+  <meta name="theme-color" content="#050608">
 
-  <!-- Open Graph / Facebook / WhatsApp -->
+  <!-- Open Graph / Facebook / WhatsApp (Logo Meta Icon) -->
   <meta property="og:type" content="website">
   <meta property="og:title" content="SK Edits — Premier Video Editing Agency & Short Form Video Editing for Coaches">
   <meta property="og:description" content="Professional video editing agency & services for coaches, creators & personal brands. High-retention Instagram reels editing, YouTube shorts editor & social media video post production services in Hyderabad, India.">
   <meta property="og:url" content="https://skedits.agency/">
-  <meta property="og:image" content="assets/coach_cinematic.jpg">
+  <meta property="og:image" content="assets/logo.png">
+  <meta property="og:image:secure_url" content="https://skedits.agency/assets/logo.png">
+  <meta property="og:image:type" content="image/png">
+  <meta property="og:image:width" content="512">
+  <meta property="og:image:height" content="512">
+  <meta property="og:image:alt" content="SK Edits Logo — Video Editing Agency">
   <meta property="og:site_name" content="SK Edits">
 
   <!-- Twitter Card -->
-  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:card" content="summary">
   <meta name="twitter:title" content="SK Edits — Premier Video Editing Agency for Coaches & Creators">
   <meta name="twitter:description" content="Specialized short form video editing agency & Instagram reels editing service for coaches, course creators & consultants. Based in Hyderabad, Telangana, India.">
-  <meta name="twitter:image" content="assets/coach_cinematic.jpg">
+  <meta name="twitter:image" content="assets/logo.png">
+  <meta name="twitter:image:alt" content="SK Edits Logo">
 
   <!-- Schema.org JSON-LD Structured Data for Search Engines -->
   <script type="application/ld+json">
@@ -81,6 +91,7 @@
 
   <!-- Custom Stylesheet -->
   <link rel="stylesheet" href="css/styles.css?v=3.0">
+  <link rel="stylesheet" href="css/dashboard.css">
 </head>
 <body>
 
@@ -113,13 +124,24 @@
           </a>
         </div>
 
-        <a
-          href="#booking-engine"
-          class="card-nav-cta-button"
-        >
-          <i class="fas fa-arrow-up-right-from-square" style="font-size:0.75rem;"></i>
-          <span>Claim ₹499 Deal</span>
-        </a>
+        <div style="display:flex; align-items:center; gap:8px;">
+          <a
+            href="#login"
+            onclick="if(window.showAuthModal) window.showAuthModal(); return false;"
+            class="card-nav-login-btn"
+            style="color:#fff; font-weight:700; font-size:0.85rem; padding:0 14px; height:38px; display:inline-flex; align-items:center; gap:6px; border-radius:var(--radius-pill); border:1px solid rgba(255,255,255,0.18); background:rgba(255,255,255,0.06); text-decoration:none; transition:all 0.2s ease;"
+          >
+            <i class="fas fa-sign-in-alt" style="color:var(--accent-lime);"></i>
+            <span>Login</span>
+          </a>
+          <a
+            href="#booking-engine"
+            class="card-nav-cta-button"
+          >
+            <i class="fas fa-arrow-up-right-from-square" style="font-size:0.75rem;"></i>
+            <span>Claim ₹499 Deal</span>
+          </a>
+        </div>
       </div>
 
       <div class="card-nav-content" id="card-nav-content" aria-hidden="true">
@@ -165,6 +187,10 @@
             <a href="#pricing" class="nav-card-link" style="color: #050608; font-weight: 700;" aria-label="Packs & Pricing">
               <i class="fas fa-arrow-up-right-from-square nav-card-link-icon" aria-hidden="true"></i>
               Packs & Pricing
+            </a>
+            <a href="#login" onclick="if(window.showAuthModal) window.showAuthModal(); return false;" class="nav-card-link" style="color: #050608; font-weight: 800;" aria-label="Agency Portal / Login">
+              <i class="fas fa-user-shield nav-card-link-icon" aria-hidden="true"></i>
+              Agency Portal / Login
             </a>
             <a href="#contact" class="nav-card-link" style="color: #050608; font-weight: 700;" aria-label="Contact Us">
               <i class="fas fa-arrow-up-right-from-square nav-card-link-icon" aria-hidden="true"></i>
@@ -1042,7 +1068,7 @@
           </div>
           <h2 class="engine-title">Customize Your Coaching Pack</h2>
           <p class="engine-subtitle">
-            Select your core package, choose video volume, and onboard directly via WhatsApp!
+            Select your core package, choose video volume, and login to your SK Edits portal!
           </p>
         </div>
 
@@ -1056,88 +1082,76 @@
           </div>
         </div>
 
-        <div class="engine-grid">
-          
-          <!-- LEFT COLUMN: INTERACTIVE CONTROLS -->
-          <div class="engine-left-column">
+        <!-- Dynamic Booking Engine Layout Grid -->
+        <div class="booking-engine-grid">
+
+          <!-- Left Column: Controls (Package & Quantity) -->
+          <div class="engine-controls-col">
             
-            <!-- Step 1: Package Selector -->
-            <div class="engine-step">
-              <div class="step-label">
-                <span class="step-number">1</span>
-                <span>Choose Core Package</span>
-              </div>
+            <!-- Package Selection -->
+            <div class="control-group">
+              <label class="control-label">1. Choose Core Package</label>
               <div class="package-radio-grid" id="engine-package-selector">
-                <div class="package-option selected" data-pkg-id="starter" data-pkg-name="Starter Pack" data-pkg-base-price="999">
-                  <div class="pkg-badge">🔥 13+ Reels @ ₹499*</div>
+                
+                <div class="package-option selected" data-pkg-id="starter" data-pkg-name="Starter Pack" data-pkg-base-price="999" data-pkg-reels="1">
+                  <div class="pkg-badge">🔥 13+ Reels @ ₹499</div>
                   <div class="pkg-title">Starter Pack</div>
                   <div class="pkg-price-row">
                     <span class="pkg-price">₹999</span>
                     <span class="pkg-unit">/ reel</span>
                   </div>
                 </div>
-                <div class="package-option" data-pkg-id="growth" data-pkg-name="Growth Coach Pack" data-pkg-base-price="1299">
-                  <div class="pkg-badge">⚡ 13+ Reels @ ₹999*</div>
+
+                <div class="package-option" data-pkg-id="growth" data-pkg-name="Growth Coach Pack" data-pkg-base-price="1299" data-pkg-reels="1">
+                  <div class="pkg-badge">⚡ 13+ Reels @ ₹999</div>
                   <div class="pkg-title">Growth Pack</div>
                   <div class="pkg-price-row">
                     <span class="pkg-price">₹1299</span>
                     <span class="pkg-unit">/ reel</span>
                   </div>
                 </div>
-                <div class="package-option" data-pkg-id="pro" data-pkg-name="Premium Pack" data-pkg-base-price="1799">
-                  <div class="pkg-badge">👑 13+ Reels @ ₹1499*</div>
+
+                <div class="package-option" data-pkg-id="pro" data-pkg-name="Premium Pack" data-pkg-base-price="1799" data-pkg-reels="1">
+                  <div class="pkg-badge">👑 13+ Reels @ ₹1499</div>
                   <div class="pkg-title">Premium Pack</div>
                   <div class="pkg-price-row">
                     <span class="pkg-price">₹1799</span>
                     <span class="pkg-unit">/ reel</span>
                   </div>
                 </div>
+
               </div>
             </div>
 
-            <!-- Step 2: Volume Slider -->
-            <div class="engine-step">
-              <div class="step-label">
-                <span class="step-number">2</span>
-                <span>Reel Volume and Target</span>
+            <!-- Volume Slider & Reel Counter -->
+            <div class="control-group">
+              <div class="slider-header-row">
+                <label class="control-label" for="engine-volume-slider">2. Reel Volume and Target</label>
+                <div class="counter-display">
+                  <span class="count-num" id="engine-reel-count">13</span>
+                  <span class="count-unit">Reels</span>
+                </div>
+                <span class="badge badge-accent" style="font-size: 0.72rem;">1 - 30+ Reels</span>
               </div>
-              <div class="quantity-control-card">
-                <div class="quantity-header">
-                  <div class="quantity-display">
-                    <span class="quantity-num" id="engine-reel-count">13</span>
-                    <span class="quantity-label">Short-Form Videos</span>
-                  </div>
-                  <span class="badge badge-accent" style="font-size: 0.72rem;">1 - 30+ Reels</span>
-                </div>
-                <input type="range" class="quantity-slider" id="engine-volume-slider" min="1" max="30" value="13" step="1">
-                <div id="engine-discount-tag" class="volume-discount-callout">
-                  <i class="fas fa-fire" style="color:var(--accent-lime);"></i> <strong style="color:var(--accent-lime);">Flat ₹499*/reel Special Offer Applied!</strong>
-                </div>
+              <input type="range" class="quantity-slider" id="engine-volume-slider" min="1" max="30" value="13" step="1">
+              <div id="engine-discount-tag" class="volume-discount-callout">
+                <i class="fas fa-fire" style="color:var(--accent-lime);"></i> <strong style="color:var(--accent-lime);">Flat ₹499*/reel Special Offer Applied!</strong>
               </div>
             </div>
 
-            <!-- Step 3: Coach Details & Notes -->
-            <div class="engine-step">
-              <div class="step-label">
-                <span class="step-number">3</span>
-                <span>Your Coaching Profile (Optional)</span>
-              </div>
-              <div class="coach-inputs-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
+            <!-- Coach Quick Details -->
+            <div class="control-group">
+              <label class="control-label">3. Coach Details</label>
+              <div class="coach-fields-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 12px;">
                 <div class="input-group-wrapper">
                   <label class="input-group-label" for="engine-coach-name"><i class="fas fa-user-tie" style="color:var(--accent-lime); margin-right:6px;"></i> Coach Name</label>
-                  <input type="text" id="engine-coach-name" class="input-field input-field-lg" placeholder="Enter your name (e.g. Coach Alex)">
+                  <input type="text" id="engine-coach-name" class="input-field input-field-lg" placeholder="Enter your name (e.g. Coach Rohan)">
                 </div>
                 <div class="input-group-wrapper">
                   <label class="input-group-label" for="engine-coach-handle"><i class="fas fa-phone-alt" style="color:var(--accent-lime); margin-right:6px;"></i> Phone / WhatsApp Number</label>
                   <input type="text" id="engine-coach-handle" class="input-field input-field-lg" placeholder="Enter phone number (e.g. +91 9876543210)">
                 </div>
               </div>
-              <div style="display: grid; grid-template-columns: 1fr; gap: 14px;">
-                <div class="input-group-wrapper">
-                  <label class="input-group-label" for="engine-coach-niche"><i class="fas fa-bullseye" style="color:var(--accent-lime); margin-right:6px;"></i> Coaching Niche</label>
-                  <select id="engine-coach-niche" class="input-field select-field input-field-lg">
-                    <option value="Executive & Business Coaching">Executive & Business Coaching</option>
-                    <option value="Online Fitness & Health Coaching">Online Fitness & Health Coaching</option>
                     <option value="Life & Mindset Coaching">Life & Mindset Coaching</option>
                     <option value="Career & Leadership Coaching">Career & Leadership Coaching</option>
                     <option value="Sales & Agency Coaching">Sales & Agency Coaching</option>
@@ -1192,8 +1206,8 @@
               </div>
 
               <div class="dispatch-actions">
-                <button type="button" class="btn-dispatch-whatsapp" id="btn-dispatch-whatsapp">
-                  <i class="fab fa-whatsapp"></i> Onboard & Send Brief via WhatsApp ↗
+                <button type="button" class="btn-dispatch-whatsapp" id="btn-dispatch-whatsapp" onclick="if(window.showAuthModal) window.showAuthModal(); return false;" style="background: linear-gradient(135deg, #CCFF00 0%, #A3E635 100%); color: #050608; border: none; font-weight: 800;">
+                  <i class="fas fa-sign-in-alt"></i> Login
                 </button>
               </div>
 
@@ -1562,7 +1576,7 @@
       
       <h3 class="booking-modal-title">Customize Your Coaching Pack</h3>
       <p class="booking-modal-desc">
-        Select your package, choose video volume, and onboard directly via WhatsApp!
+        Select your package, choose video volume, and login to your SK Edits portal!
       </p>
 
       <!-- OFFER NOTICE BANNER (Requirement 2 & 8) -->
@@ -1655,8 +1669,8 @@
 
       <!-- Dispatch Buttons -->
       <div class="dispatch-actions">
-        <button type="button" class="btn-dispatch-whatsapp" id="modal-dispatch-whatsapp">
-          <i class="fab fa-whatsapp"></i> Onboard via WhatsApp ↗
+        <button type="button" class="btn-dispatch-whatsapp" id="modal-dispatch-whatsapp" onclick="if(window.closeBookingModal) window.closeBookingModal(); if(window.showAuthModal) window.showAuthModal(); return false;" style="background: linear-gradient(135deg, #CCFF00 0%, #A3E635 100%); color: #050608; border: none; font-weight: 800;">
+          <i class="fas fa-sign-in-alt"></i> Login
         </button>
       </div>
 
@@ -1688,5 +1702,6 @@
 
   <!-- Scripts -->
   <script type="module" src="js/app.js"></script>
+  <script type="module" src="js/dashboard.js"></script>
 </body>
 </html>

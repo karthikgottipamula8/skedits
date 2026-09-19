@@ -4063,6 +4063,14 @@ textarea.form-control {
     height: 24px;
   }
 
+  .card-nav-login-btn {
+    flex: 0 0 auto;
+    height: 32px !important;
+    padding: 0 10px !important;
+    font-size: 0.75rem !important;
+    gap: 4px !important;
+  }
+
   .card-nav-cta-button {
     flex: 0 0 auto;
     padding: 0 0.65rem !important;
@@ -4283,8 +4291,76 @@ textarea.form-control {
   }
 
   .floating-whatsapp-btn, .floating-call-btn {
-    width: 50px;
-    height: 50px;
-    font-size: 1.4rem;
+    width: 48px;
+    height: 48px;
+    font-size: 1.3rem;
+  }
+
+  /* Booking & Video Modals Mobile Padding & Sizing */
+  .booking-modal-backdrop, .video-modal-backdrop {
+    padding: 12px !important;
+    overflow-y: auto !important;
+    align-items: center !important;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .booking-modal-container.engine-modal-expanded {
+    padding: 24px 16px 20px 16px !important;
+    max-height: calc(100vh - 24px) !important;
+    width: 100% !important;
+    margin: auto 0 !important;
+    border-radius: var(--radius-lg) !important;
+  }
+
+  .video-modal-container {
+    max-width: calc(100vw - 24px) !important;
+    border-radius: var(--radius-lg) !important;
+  }
+
+  /* Prevent automatic iOS zooming on text inputs */
+  .modal-input, .input-field, .portal-input {
+    font-size: 16px !important;
+  }
+
+  /* Toast position on mobile (doesn't clash with floating buttons) */
+  .conversion-toast {
+    left: 14px;
+    right: 76px;
+    bottom: 20px;
+    max-width: calc(100vw - 94px);
+  }
+}
+
+/* Extra small screens (iPhone SE, Galaxy A series, <= 390px) */
+@media (max-width: 390px) {
+  .card-nav-top {
+    padding: 0.35rem 0.45rem;
+    gap: 4px;
+  }
+
+  .card-nav-login-btn {
+    padding: 0 8px !important;
+    font-size: 0.72rem !important;
+  }
+
+  .card-nav-cta-button {
+    padding: 0 7px !important;
+    font-size: 0.7rem !important;
+  }
+
+  .logo-text span:first-child {
+    font-size: 0.85rem;
+  }
+
+  .hero-title {
+    font-size: 1.85rem !important;
+  }
+
+  .section-title {
+    font-size: 1.6rem !important;
+  }
+
+  .stat-number {
+    font-size: 1.8rem !important;
   }
 }
